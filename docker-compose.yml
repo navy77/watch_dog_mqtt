@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  watch_dog:
+    build: .
+    container_name: watch_dog_qc
+    volumes:
+      - D:\watch_dog\data\:/app/data
+    restart: always
