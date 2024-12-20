@@ -8,13 +8,26 @@ import os
 import json
 load_dotenv()
 
-mqtt_broker = os.getenv('MQTT_BROKER')
-mqtt_port = int(os.getenv('MQTT_PORT'))
-mqtt_topic = os.getenv('MQTT_TOPIC')
-number_rows = int(os.getenv('NUMBER_ROWS'))
+mqtt_broker = '192.168.0.160'
+mqtt_port = 1883
+mqtt_topic = 'data/test'
+number_rows = 2
 
 client = mqtt.Client()
-client.connect(mqtt_broker, mqtt_port, 60)
+
+# Function to connect to the broker with a retry mechanism
+def connect_broker():
+    while True:
+        try:
+            client.connect(mqtt_broker, mqtt_port, 60)
+            print("Connected to MQTT broker")
+            break
+        except Exception as e:
+            print(f"Connection failed: {e}. Retrying in 5 seconds...")
+            time.sleep(5)
+
+# Call the function to connect to the broker
+connect_broker()
 
 class MyHandler(FileSystemEventHandler):
     def on_created(self, event):
@@ -27,8 +40,8 @@ class MyHandler(FileSystemEventHandler):
         cav_full = name_split[4]
         cav_split = cav_full.split(".")
         cav = cav_split[0]
-
-        data = pd.read_csv(name,header=None,nrows=number_rows)
+        time.sleep(1)
+        data = pd.read_csv(name, header=None, nrows=number_rows)
         df = pd.DataFrame(data)
         df_split = df[0].str.split("=", expand=True)
         df_split[0] = df_split[0].str.strip()
@@ -46,7 +59,7 @@ class MyHandler(FileSystemEventHandler):
 if __name__ == "__main__":
     event_handler = MyHandler()
     observer = Observer()
-    observer.schedule(event_handler, path='./data', recursive=True)
+    observer.schedule(event_handler, path='D:\\watch_dog_mqtt\\data', recursive=True)
     observer.start()
 
     try:
